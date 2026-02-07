@@ -23,14 +23,18 @@ async function moveChest({ apiKey, apiUrl, loadChunks }, from, to) {
 
 async function runConfigFromGithub(configName) {
   const apiKey = process.env.API_KEY;
-  const base = process.env.GITHUB_CONFIG_BASE;
+  const base = (process.env.GITHUB_CONFIG_BASE || "").trim();
   const defaultApiUrl =
     process.env.API_URL || "https://api.germanminer.de/v2/world/move/content";
 
   if (!apiKey) throw new Error("API_KEY fehlt");
-  if (!base) throw new Error("GITHUB_CONFIG_BASE fehlt");
+  if (!base) throw new Error("GITHUB_CONFIG_BASE fehlt oder ist leer");
 
-  const configUrl = `${base}/${configName}.json`;
+  const cleanBase = base.replace(/\/+$/, "");
+  const configUrl = `${cleanBase}/${configName}.json`;
+
+  console.log("CONFIG URL:", configUrl);
+
   const config = await fetchJson(configUrl);
 
   const apiUrl = config.apiUrl || defaultApiUrl;
@@ -45,13 +49,9 @@ async function runConfigFromGithub(configName) {
   for (let i = 0; i < moves.length; i++) {
     const { from, to } = moves[i];
     try {
-      const result = await moveChest(
-        { apiKey, apiUrl, loadChunks },
-        from,
-        to
-      );
+      const result = await moveChest({ apiKey, apiUrl, loadChunks }, from, to);
       if (result && result.success) okCount++;
-      else errors.push(`Step ${i + 1}`);
+      else errors.push(`Step ${i + 1}: ${result?.error || "Unbekannt"}`);
     } catch (e) {
       errors.push(`Step ${i + 1}: ${e.message}`);
     }
@@ -62,8 +62,9 @@ async function runConfigFromGithub(configName) {
     total: moves.length,
     okCount,
     failCount: errors.length,
-    errors
+    errors: errors.slice(0, 8)
   };
 }
+
 
 module.exports = { runConfigFromGithub };
