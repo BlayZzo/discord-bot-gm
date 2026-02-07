@@ -1,0 +1,10 @@
+{
+  "apiUrl": "https://api.germanminer.de/v2/world/move/content",
+  "loadChunks": true,
+  "moves": [
+    {
+      "from": { "x": -3759, "y": 40, "z": -1100 },
+      "to":   { "x": -3779, "y": 75, "z": -1111 }
+    }
+  ]
+}
